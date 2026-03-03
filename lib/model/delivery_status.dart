@@ -1,0 +1,1 @@
+enum DeliveryStatus { inProgress, delivered }

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-
-enum DeliveryStatus { inProgress, delivered }
+import '../model/delivery_status.dart';
+import '../components/form_field_date_time.dart';
 
 class CreateDelivery extends StatefulWidget {
   const CreateDelivery({super.key});
@@ -22,36 +22,6 @@ class _CreateDeliveryState extends State<CreateDelivery> {
     _vehicleIdController.dispose();
     _addressController.dispose();
     super.dispose();
-  }
-
-  Future<void> _pickDateTime(BuildContext context, {required bool isStarted}) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
-    if (date == null || !context.mounted) return;
-
-    final time = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (time == null) return;
-
-    final picked = DateTime.utc(date.year, date.month, date.day, time.hour, time.minute);
-    setState(() {
-      if (isStarted) {
-        _startedAt = picked;
-      } else {
-        _finishedAt = picked;
-      }
-    });
-  }
-
-  String _formatDateTime(DateTime dt) {
-    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
-        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} UTC';
   }
 
   @override
@@ -78,32 +48,17 @@ class _CreateDeliveryState extends State<CreateDelivery> {
                 validator: (value) =>
                     value == null || value.isEmpty ? 'Required' : null,
               ),
-              FormField<DateTime>(
+              FormFieldDateTime(
+                label: 'Started at',
+                value: _startedAt,
+                onChanged: (picked) => setState(() => _startedAt = picked),
                 validator: (_) => _startedAt == null ? 'Required' : null,
-                builder: (field) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(_startedAt == null
-                          ? 'Started at: not set'
-                          : 'Started at: ${_formatDateTime(_startedAt!)}'),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () => _pickDateTime(context, isStarted: true),
-                    ),
-                    if (field.hasError)
-                      Text(
-                        field.errorText!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                          fontSize: 12,
-                        ),
-                      ),
-                  ],
-                ),
               ),
               if (_status == DeliveryStatus.delivered)
-                FormField<DateTime>(
+                FormFieldDateTime(
+                  label: 'Finished at',
+                  value: _finishedAt,
+                  onChanged: (picked) => setState(() => _finishedAt = picked),
                   validator: (_) {
                     if (_finishedAt == null) return 'Required for delivered status';
                     if (_startedAt != null && !_finishedAt!.isAfter(_startedAt!)) {
@@ -111,27 +66,6 @@ class _CreateDeliveryState extends State<CreateDelivery> {
                     }
                     return null;
                   },
-                  builder: (field) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: Text(_finishedAt == null
-                            ? 'Finished at: not set'
-                            : 'Finished at: ${_formatDateTime(_finishedAt!)}'),
-                        trailing: const Icon(Icons.calendar_today),
-                        onTap: () => _pickDateTime(context, isStarted: false),
-                      ),
-                      if (field.hasError)
-                        Text(
-                          field.errorText!,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontSize: 12,
-                          ),
-                        ),
-                    ],
-                  ),
                 ),
               DropdownButtonFormField<DeliveryStatus>(
                 initialValue: _status,
