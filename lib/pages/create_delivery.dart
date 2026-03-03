@@ -102,30 +102,37 @@ class _CreateDeliveryState extends State<CreateDelivery> {
                   ],
                 ),
               ),
-              FormField<DateTime>(
-                validator: (_) => _finishedAt == null ? 'Required' : null,
-                builder: (field) => Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(_finishedAt == null
-                          ? 'Finished at: not set'
-                          : 'Finished at: ${_formatDateTime(_finishedAt!)}'),
-                      trailing: const Icon(Icons.calendar_today),
-                      onTap: () => _pickDateTime(context, isStarted: false),
-                    ),
-                    if (field.hasError)
-                      Text(
-                        field.errorText!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                          fontSize: 12,
-                        ),
+              if (_status == DeliveryStatus.delivered)
+                FormField<DateTime>(
+                  validator: (_) {
+                    if (_finishedAt == null) return 'Required for delivered status';
+                    if (_startedAt != null && !_finishedAt!.isAfter(_startedAt!)) {
+                      return 'Must be after Started at';
+                    }
+                    return null;
+                  },
+                  builder: (field) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(_finishedAt == null
+                            ? 'Finished at: not set'
+                            : 'Finished at: ${_formatDateTime(_finishedAt!)}'),
+                        trailing: const Icon(Icons.calendar_today),
+                        onTap: () => _pickDateTime(context, isStarted: false),
                       ),
-                  ],
+                      if (field.hasError)
+                        Text(
+                          field.errorText!,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
               DropdownButtonFormField<DeliveryStatus>(
                 initialValue: _status,
                 decoration: const InputDecoration(labelText: 'Status'),
@@ -139,7 +146,10 @@ class _CreateDeliveryState extends State<CreateDelivery> {
                     child: Text('Delivered'),
                   ),
                 ],
-                onChanged: (value) => setState(() => _status = value),
+                onChanged: (value) => setState(() {
+                  _status = value;
+                  if (value == DeliveryStatus.inProgress) _finishedAt = null;
+                }),
                 validator: (value) => value == null ? 'Required' : null,
               ),
               ElevatedButton(
