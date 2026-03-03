@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utils/date_format.dart';
 
 class FormFieldDateTime extends StatelessWidget {
   final String label;
@@ -32,11 +33,6 @@ class FormFieldDateTime extends StatelessWidget {
     onChanged(DateTime.utc(date.year, date.month, date.day, time.hour, time.minute));
   }
 
-  String _formatDateTime(DateTime dt) {
-    return '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} '
-        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')} UTC';
-  }
-
   @override
   Widget build(BuildContext context) {
     return FormField<DateTime>(
@@ -49,7 +45,7 @@ class FormFieldDateTime extends StatelessWidget {
             title: Text(
               value == null
                   ? '$label: not set'
-                  : '$label: ${_formatDateTime(value!)}',
+                  : '$label: ${formatDateTime(value!)}',
             ),
             trailing: const Icon(Icons.calendar_today),
             onTap: () => _pickDateTime(context),
